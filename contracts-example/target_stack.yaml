@@ -1,0 +1,12 @@
+apiVersion: productfactory.io/v1
+kind: TargetStack
+language:
+  name: kotlin
+  framework: ktor
+packaging:
+  container: docker
+database:
+  primary: postgresql
+observability:
+  tracing: otel
+  metrics: prometheus

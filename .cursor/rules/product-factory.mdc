@@ -1,0 +1,18 @@
+---
+description: Конвенции Product Factory — Kotlin/Docker, границы слоёв, контракты, docs
+globs: 
+  - "**/*.kt"
+  - "docs/**"
+  - "contracts/**"
+  - "scripts/**"
+alwaysApply: false
+---
+
+# Product Factory
+
+- Код фабрики: Kotlin, Ktor, JDK 17. В Docker только JVM (Dockerfile в корне).
+- Side-effects только через Tool Executor; агент — proposals, не прямой write/deploy. См. docs/adr/0002-layer-boundaries.md.
+- Контракты: contracts/schemas/ (product, constraints, quality_profile, risk_profile, target_stack), apiVersion productfactory.io/v1.
+- Новые решения — ADR в docs/adr/; риски — docs/risk-register.md, approvals — docs/approval-policy.md.
+- Запуск фабрики: только Docker (docker build + docker run). Локальный gradle — не для штатного запуска.
+- Оркестр спринта: python3 scripts/run_alpha_sprint.py (по умолчанию workspace-write).

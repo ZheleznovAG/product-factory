@@ -1,0 +1,4 @@
+{
+  "explanation": "Deterministic stub planner selected a safe 3-step pipeline (contracts -> repo generation -> quality gates) for goal 'Собрать web-app лендинг на Ktor.'."
+}
+

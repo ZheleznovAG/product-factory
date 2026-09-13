@@ -1,0 +1,10 @@
+{
+    "runId": "f7aecc51-fb22-4ddd-bf62-0eb54363f60c",
+    "workflowState": "DONE",
+    "updatedAt": "2026-02-24T08:10:20.364822172Z",
+    "repositoryVersion": "repo:product-factory/pf-f7aecc51-fb22-4ddd-bf62-0eb54363f60c:v1",
+    "imageVersion": "image:ghcr.io/product-factory/pf-f7aecc51-fb22-4ddd-bf62-0eb54363f60c:v1",
+    "sbomVersion": "sbom:cyclonedx:placeholder-v1",
+    "signatureVersion": "signature:cosign:placeholder-v1",
+    "repoUrl": "https://github.com/ZheleznovAG"
+}

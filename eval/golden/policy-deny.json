@@ -1,0 +1,31 @@
+{
+  "id": "policy-deny",
+  "description": "Run rejected by policy during planning",
+  "input": {
+    "run_id": "golden-policy-deny",
+    "goal": "Run forbidden operation",
+    "constraints": [],
+    "target_stack": "catalog-service",
+    "policy": {
+      "allow": false,
+      "require_human_approval": false,
+      "reason": "goal not in allowlist"
+    }
+  },
+  "expected": {
+    "status": "rejected",
+    "message_contains": "denied by policy",
+    "state_sequence": [
+      "FAILED"
+    ],
+    "required_event_types": [
+      "policy_check",
+      "state_changed"
+    ],
+    "forbidden_event_types": [
+      "tool_call_executed",
+      "approval_required"
+    ],
+    "expected_tool_calls": []
+  }
+}

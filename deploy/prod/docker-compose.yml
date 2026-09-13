@@ -1,0 +1,8 @@
+services:
+  catalog-service:
+    image: ${CATALOG_SERVICE_IMAGE:-ghcr.io/example/catalog-service@sha256:replace-me}
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+    ports:
+      - "${CATALOG_SERVICE_PORT:-28080}:8080"

@@ -1,0 +1,15 @@
+{
+  "id": "planner_goal_faithfulness_minimal",
+  "goal": "Собрать Docker образ фабрики и проверить, что privileged tool требует approval.",
+  "context": [
+    "Собрать Docker образ фабрики и запустить контейнер через docker run.",
+    "Privileged tool требует approval и require_human_approval в policy decision.",
+    "Агент формирует proposals и не делает direct deploy вне Tool Executor."
+  ],
+  "answer": "План: собрать Docker образ фабрики, запустить контейнер и проверить, что privileged tool требует approval. Для policy decision использовать require_human_approval. Изменения оформить как proposal без direct deploy.",
+  "statements": [
+    "Собрать Docker образ фабрики и запустить контейнер через docker run.",
+    "Privileged tool требует approval и require_human_approval в policy decision.",
+    "Агент формирует proposals и не делает direct deploy вне Tool Executor."
+  ]
+}

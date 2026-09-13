@@ -1,0 +1,23 @@
+apiVersion: productfactory.io/v1
+kind: ProductSpec
+metadata:
+  productId: example-catalog
+  owner: platform-team
+  createdAt: "2026-02-19"
+product:
+  type: api-service
+  name: Example Catalog API
+  description: Minimal example for CI validation
+  interfaces:
+    http:
+      basePath: /api
+      auth: bearer
+data:
+  stores:
+    - name: main
+      kind: postgres
+      schema: public
+nonFunctional:
+  availabilityTarget: "99.9"
+  maxP95LatencyMs: 500
+  maxErrorRatePercent: 0.1

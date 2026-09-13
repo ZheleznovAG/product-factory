@@ -1,0 +1,11 @@
+{
+  "type": "adr_draft",
+  "context": "Goal: Собрать web-app лендинг на Ktor. Constraints: Без внешней БД.; Фокус на быстрый smoke-run.. Product spec was not provided explicitly. Contracts bundle includes: constraints, product, quality_profile, risk_profile, target_stack.",
+  "decision": "Use deterministic execution core with agent-generated proposals for planning artifacts.",
+  "consequences": [
+    "Improves auditability through structured planner artifacts.",
+    "Requires schema governance for planner output evolution.",
+    "Allows future swap to LLM planner without changing workflow control plane."
+  ]
+}
+

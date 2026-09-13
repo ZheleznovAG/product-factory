@@ -1,0 +1,10 @@
+# Allowlist of tools per risk tier. Phase 2.
+# Only tools listed here may be invoked by the agent.
+---
+tools: []
+# Example after Phase 2:
+# tools:
+#   - name: create_repo
+#     risk_tier: write_limited
+#   - name: read_file
+#     risk_tier: read_only

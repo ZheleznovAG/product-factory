@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tool_contract_registry",
+  "description": "Registry of tools and tool call contract. Policy Engine and Tool Executor use this.",
+  "$defs": {
+    "tool_call_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "toolName": { "type": "string", "minLength": 1 },
+        "idempotencyKey": { "type": "string", "minLength": 1 },
+        "arguments": { "type": "object" }
+      },
+      "required": ["toolName", "idempotencyKey", "arguments"]
+    },
+    "tool_call_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "success": { "type": "boolean" },
+        "result": { "type": "object" },
+        "message": { "type": "string" },
+        "replayed": { "type": "boolean" }
+      },
+      "required": ["success", "result", "replayed"]
+    },
+    "tool_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registry_version": { "type": "string", "minLength": 1 },
+        "tools": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "risk_tier": {
+                "type": "string",
+                "enum": ["read_only", "write_limited", "privileged"]
+              },
+              "requires_human_approval": { "type": "boolean" },
+              "auth_scope": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 },
+                "minItems": 1
+              },
+              "idempotency": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "required": { "type": "boolean" },
+                  "key_fields": {
+                    "type": "array",
+                    "items": { "type": "string", "minLength": 1 },
+                    "minItems": 1
+                  }
+                },
+                "required": ["required", "key_fields"]
+              },
+              "timeouts_ms": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "schedule_to_close": { "type": "integer", "minimum": 1000, "maximum": 600000 },
+                  "start_to_close": { "type": "integer", "minimum": 1000, "maximum": 600000 }
+                },
+                "required": ["schedule_to_close", "start_to_close"]
+              },
+              "retry_policy": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "max_attempts": { "type": "integer", "minimum": 1, "maximum": 50 },
+                  "initial_interval_ms": { "type": "integer", "minimum": 100, "maximum": 60000 },
+                  "backoff_coefficient": { "type": "number", "minimum": 1.0, "maximum": 10.0 }
+                },
+                "required": ["max_attempts", "initial_interval_ms", "backoff_coefficient"]
+              },
+              "input_schema": { "type": "object" },
+              "output_schema": { "type": "object" }
+            },
+            "required": [
+              "name",
+              "description",
+              "risk_tier",
+              "requires_human_approval",
+              "auth_scope",
+              "idempotency",
+              "timeouts_ms",
+              "retry_policy",
+              "input_schema",
+              "output_schema"
+            ]
+          }
+        }
+      },
+      "required": ["registry_version", "tools"]
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/tool_registry" },
+    { "$ref": "#/$defs/tool_call_request" }
+  ]
+}

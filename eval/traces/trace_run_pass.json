@@ -1,0 +1,55 @@
+{
+  "traceVersion": "productfactory.io/trace/v1",
+  "runId": "run-2026-02-20-0001",
+  "scenarioId": "agent_non_privileged_tool_allowed",
+  "startedAt": "2026-02-20T08:00:00Z",
+  "finishedAt": "2026-02-20T08:00:12Z",
+  "steps": [
+    {
+      "stepId": "step-1",
+      "name": "input_validation",
+      "status": "passed",
+      "startedAt": "2026-02-20T08:00:00Z",
+      "finishedAt": "2026-02-20T08:00:01Z"
+    },
+    {
+      "stepId": "step-2",
+      "name": "tool_execution",
+      "status": "passed",
+      "startedAt": "2026-02-20T08:00:01Z",
+      "finishedAt": "2026-02-20T08:00:10Z"
+    }
+  ],
+  "tool_calls": [
+    {
+      "toolCallId": "tc-1",
+      "name": "create_repo_from_archetype",
+      "idempotencyKey": "catalog-service:catalog-service-api",
+      "status": "success",
+      "attempt": 1,
+      "policyDecisionId": "pd-1"
+    }
+  ],
+  "policy_decisions": [
+    {
+      "decisionId": "pd-1",
+      "stage": "tool_call",
+      "allow": true,
+      "require_human_approval": false,
+      "reasons": [
+        "tool_in_allowlist"
+      ],
+      "input_summary": {
+        "tool_calls": [
+          "create_repo_from_archetype"
+        ],
+        "token_usage": 1320
+      }
+    }
+  ],
+  "outcome": {
+    "status": "passed",
+    "reason": "Tool executed within policy",
+    "score": 1.0
+  }
+}

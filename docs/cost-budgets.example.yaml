@@ -1,0 +1,47 @@
+# Example cost budget policy for Product Factory (draft).
+# This file documents recommended defaults and period caps.
+#
+# API per-run override fields (FactoryRunRequest.budget):
+# - token_budget
+# - tool_calls_budget
+# - wall_clock_seconds
+#
+# Recommended env defaults:
+# - PF_RUN_DEFAULT_TOKEN_BUDGET
+# - PF_RUN_DEFAULT_TOOL_CALLS_BUDGET
+# - PF_RUN_DEFAULT_WALL_CLOCK_SECONDS
+#
+# Runtime load path for pre-run period enforcement:
+# - COST_BUDGETS_PATH (default: policies/cost-budgets.yaml)
+---
+apiVersion: productfactory.io/v1
+kind: CostBudgetPolicy
+
+runDefaults:
+  token_budget: 100000
+  tool_calls_budget: 50
+  wall_clock_seconds: 3600
+
+periodCaps:
+  weekly:
+    llm_tokens_total: 1200000
+    tool_calls_total: 8000
+    runs_total: 500
+    wall_clock_seconds_total: 86400
+    soft_threshold_ratio: 0.8
+    hard_threshold_ratio: 1.0
+  monthly:
+    llm_tokens_total: 5000000
+    tool_calls_total: 32000
+    runs_total: 2000
+    wall_clock_seconds_total: 345600
+    soft_threshold_ratio: 0.8
+    hard_threshold_ratio: 1.0
+
+actions:
+  on_soft_cap:
+    - "emit_alert"
+    - "require_review_for_non_critical_runs"
+  on_hard_cap:
+    - "deny_non_critical_runs"
+    - "allow_only_manual_override_with_approval"

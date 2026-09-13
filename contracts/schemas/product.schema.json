@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/product.schema.json",
+  "title": "ProductSpec",
+  "description": "Input contract v1 for product.yaml (ProductSpec).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "product", "data", "nonFunctional"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "ProductSpec"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productId", "owner", "createdAt"],
+      "properties": {
+        "productId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name", "description", "interfaces"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["api-service", "web-app", "data-pipeline"]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interfaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["http"],
+          "properties": {
+            "http": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["basePath", "auth"],
+              "properties": {
+                "basePath": {
+                  "type": "string",
+                  "pattern": "^/"
+                },
+                "auth": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stores"],
+      "properties": {
+        "stores": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "schema"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "nonFunctional": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availabilityTarget", "maxP95LatencyMs", "maxErrorRatePercent"],
+      "properties": {
+        "availabilityTarget": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+        },
+        "maxP95LatencyMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxErrorRatePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,134 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (example: v1.2.3)"
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  high-risk-manual-approval:
+    runs-on: ubuntu-latest
+    environment:
+      name: high-risk-release
+    steps:
+      - name: Await manual approval for high-risk release
+        run: |
+          echo "Manual approval granted via protected environment high-risk-release."
+
+  release-images:
+    needs: high-risk-manual-approval
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: product-factory
+            context: .
+            dockerfile: Dockerfile
+          - name: catalog-service
+            context: archetypes/catalog-service
+            dockerfile: archetypes/catalog-service/Dockerfile
+          - name: web-app
+            context: archetypes/web-app
+            dockerfile: archetypes/web-app/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve release metadata
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RELEASE_TAG="${{ inputs.release_tag }}"
+          else
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+          fi
+          if [ -z "${RELEASE_TAG}" ]; then
+            echo "release tag must not be empty" >&2
+            exit 1
+          fi
+          IMAGE_REPO="ghcr.io/${OWNER}/${{ matrix.image.name }}"
+          IMAGE_REF="${IMAGE_REPO}:${RELEASE_TAG}"
+          {
+            echo "RELEASE_TAG=${RELEASE_TAG}"
+            echo "IMAGE_REPO=${IMAGE_REPO}"
+            echo "IMAGE_REF=${IMAGE_REF}"
+          } >> "$GITHUB_ENV"
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push release image
+        run: |
+          docker build \
+            --file "${{ matrix.image.dockerfile }}" \
+            --tag "${IMAGE_REF}" \
+            "${{ matrix.image.context }}"
+          docker push "${IMAGE_REF}"
+
+      - name: Resolve pushed image digest
+        run: |
+          DIGEST="$(docker buildx imagetools inspect "${IMAGE_REF}" --format '{{.Manifest.Digest}}')"
+          if [ -z "${DIGEST}" ]; then
+            echo "Unable to resolve pushed image digest for ${IMAGE_REF}" >&2
+            exit 1
+          fi
+          {
+            echo "IMAGE_DIGEST=${DIGEST}"
+            echo "IMAGE_DIGEST_REF=${IMAGE_REPO}@${DIGEST}"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate SBOM (Syft, CycloneDX JSON)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_REF }}
+          format: cyclonedx-json
+          output-file: sbom-cyclonedx-${{ matrix.image.name }}.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.image.name }}-${{ env.RELEASE_TAG }}
+          path: sbom-cyclonedx-${{ matrix.image.name }}.json
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (Cosign keyless)
+        run: cosign sign --yes "${IMAGE_REF}"
+
+      - name: Verify image signature (Cosign)
+        run: |
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/release.yml@.*" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${IMAGE_REF}"
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE_REPO }}
+          subject-digest: ${{ env.IMAGE_DIGEST }}
+          push-to-registry: true
+
+      - name: Verify SLSA provenance attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh attestation verify "oci://${IMAGE_DIGEST_REF}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --predicate-type "https://slsa.dev/provenance/v1"

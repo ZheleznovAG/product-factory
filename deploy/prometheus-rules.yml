@@ -1,0 +1,92 @@
+# Thresholds in these alerts are intentionally aligned with:
+# - docs/slo-ci-gate.md (live-run SLO thresholds)
+# - ci/slo-thresholds.json (CI gate source of truth)
+groups:
+  - name: product-factory-slo-and-cost
+    rules:
+      - alert: FactoryRunSuccessRateLow30d
+        expr: |
+          (
+            sum(increase(factory_runs_total{status="accepted"}[30d]))
+            /
+            clamp_min(sum(increase(factory_runs_total{status=~"accepted|rejected"}[30d])), 1)
+          ) < 0.95
+          and
+          sum(increase(factory_runs_total{status=~"accepted|rejected"}[30d])) > 0
+        for: 30m
+        labels:
+          severity: warning
+          slo: availability
+        annotations:
+          summary: "Factory run success rate below 95% over 30d"
+          description: "Success rate for factory runs in the last 30 days dropped below 95%."
+          runbook: "docs/slo-ci-gate.md"
+
+      - alert: FactoryRunLatencyP50TooHigh30d
+        expr: |
+          histogram_quantile(
+            0.50,
+            sum by (le) (increase(factory_run_duration_seconds_bucket[30d]))
+          ) > 900
+          and
+          sum(increase(factory_run_duration_seconds_count[30d])) > 0
+        for: 30m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "Factory run latency p50 above 900s"
+          description: "The p50 run duration over the last 30 days is above 900 seconds."
+          runbook: "docs/slo-ci-gate.md"
+
+      - alert: FactoryRunLatencyP99TooHigh30d
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (increase(factory_run_duration_seconds_bucket[30d]))
+          ) > 7200
+          and
+          sum(increase(factory_run_duration_seconds_count[30d])) > 0
+        for: 30m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "Factory run latency p99 above 7200s"
+          description: "The p99 run duration over the last 30 days is above 7200 seconds."
+          runbook: "docs/slo-ci-gate.md"
+
+      - alert: FactoryLlmTokenBudgetSoftCapApproaching30d
+        expr: |
+          (
+            sum(increase(factory_llm_input_tokens_total[30d]))
+            +
+            sum(increase(factory_llm_output_tokens_total[30d]))
+          ) > (5000000 * 0.8)
+        for: 30m
+        labels:
+          severity: warning
+          slo: cost
+          budget_cap_tokens_30d: "5000000"
+          budget_soft_ratio: "0.8"
+        annotations:
+          summary: "LLM token budget reached 80% of monthly cap"
+          description: "Total LLM input+output tokens for the last 30 days exceeded 80% of the 5,000,000 token budget cap."
+          runbook: "docs/slo-ci-gate.md"
+
+      - alert: FactoryLlmTokenBudgetHardCapExceeded30d
+        expr: |
+          (
+            sum(increase(factory_llm_input_tokens_total[30d]))
+            +
+            sum(increase(factory_llm_output_tokens_total[30d]))
+          ) >= 5000000
+        for: 15m
+        labels:
+          severity: critical
+          slo: cost
+          budget_cap_tokens_30d: "5000000"
+        annotations:
+          summary: "LLM token budget cap exceeded"
+          description: "Total LLM input+output tokens for the last 30 days exceeded the 5,000,000 token budget cap."
+          runbook: "docs/slo-ci-gate.md"

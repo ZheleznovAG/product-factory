@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/target_stack.schema.json",
+  "title": "TargetStack",
+  "description": "Input contract v1 for target_stack.yaml (TargetStack).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "language", "packaging", "database", "observability"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "TargetStack"
+    },
+    "language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "framework"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "framework": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "packaging": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container"],
+      "properties": {
+        "container": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracing", "metrics"],
+      "properties": {
+        "tracing": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metrics": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

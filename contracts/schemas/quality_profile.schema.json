@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/quality_profile.schema.json",
+  "title": "QualityProfile",
+  "description": "Input contract v1 for quality_profile.yaml (QualityProfile).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "testing", "securityGates", "observability"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "QualityProfile"
+    },
+    "testing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unitCoverageMinPercent", "integrationTestsRequired", "smokeTestsRequired"],
+      "properties": {
+        "unitCoverageMinPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "integrationTestsRequired": {
+          "type": "boolean"
+        },
+        "smokeTestsRequired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "securityGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sbom", "vulnerabilityScan", "signing"],
+      "properties": {
+        "sbom": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "required"],
+          "properties": {
+            "format": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": {
+              "type": "boolean"
+            }
+          }
+        },
+        "vulnerabilityScan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tool", "failOnSeverity"],
+          "properties": {
+            "tool": {
+              "type": "string",
+              "minLength": 1
+            },
+            "failOnSeverity": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+              }
+            }
+          }
+        },
+        "signing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tool", "required"],
+          "properties": {
+            "tool": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracing", "metrics"],
+      "properties": {
+        "tracing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "protocol"],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "protocol": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required"],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "sloGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "maxGenerationTimeSeconds",
+        "maxPolicyDenySharePercent",
+        "minSuccessRatePercent"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxGenerationTimeSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxPolicyDenySharePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "minSuccessRatePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "lookbackRuns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      }
+    }
+  }
+}

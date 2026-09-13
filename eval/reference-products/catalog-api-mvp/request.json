@@ -1,0 +1,19 @@
+{
+  "description": "Catalog API baseline with explicit constraints and full contracts bundle.",
+  "request": {
+    "goal": "Создать Kotlin/Ktor API каталога с health endpoint.",
+    "constraints": [
+      "Использовать PostgreSQL.",
+      "Подготовить Docker-совместимый артефакт."
+    ],
+    "target_stack": "catalog-service"
+  },
+  "contracts": {
+    "product": "inputs/product.yaml",
+    "constraints": "inputs/constraints.yaml",
+    "quality_profile": "inputs/quality_profile.yaml",
+    "risk_profile": "inputs/risk_profile.yaml",
+    "target_stack": "inputs/target_stack.yaml"
+  }
+}
+

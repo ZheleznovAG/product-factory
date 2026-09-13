@@ -1,0 +1,63 @@
+name: contracts-validation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  detect-contract-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      contracts_changed: ${{ steps.filter.outputs.contracts }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect contract changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            contracts:
+              - "contracts/**"
+              - "contracts-example/**"
+
+  validate-contracts:
+    runs-on: ubuntu-latest
+    needs: detect-contract-changes
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      needs.detect-contract-changes.outputs.contracts_changed == 'true'
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t product-factory:ci .
+      - name: Run Contract Drift Guard
+        run: |
+          CONTRACTS_DIR="/w/contracts-example"
+          if [ ! -d "$GITHUB_WORKSPACE/contracts-example" ]; then
+            CONTRACTS_DIR="/w/contracts"
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/reports"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/w" \
+            -w /app \
+            product-factory:ci \
+            contract-drift-guard "$CONTRACTS_DIR" --format json --report /w/reports/contract-drift-report.json
+      - name: Generate SLSA provenance attestation for contract drift report
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: reports/contract-drift-report.json
+      - name: Verify SLSA provenance attestation for contract drift report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh attestation verify reports/contract-drift-report.json --repo "${GITHUB_REPOSITORY}"
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-drift-report
+          path: reports/contract-drift-report.json
+          if-no-files-found: warn

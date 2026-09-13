@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "factory_run_trace",
+  "description": "Trace of one Product Factory run used for offline grading",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "traceVersion": { "type": "string", "const": "productfactory.io/trace/v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "scenarioId": { "type": "string" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "stepId": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string" },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "finishedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["stepId", "name", "status"]
+      }
+    },
+    "tool_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "toolCallId": { "type": "string" },
+          "name": { "type": "string" },
+          "idempotencyKey": { "type": "string" },
+          "status": { "type": "string" },
+          "attempt": { "type": "integer", "minimum": 1 },
+          "policyDecisionId": { "type": "string" }
+        },
+        "required": ["name", "status"]
+      }
+    },
+    "policy_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "decisionId": { "type": "string" },
+          "stage": { "type": "string" },
+          "allow": { "type": "boolean" },
+          "require_human_approval": { "type": "boolean" },
+          "reasons": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "input_summary": { "type": "object" }
+        },
+        "required": ["allow", "require_human_approval"]
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "status": { "type": "string" },
+        "reason": { "type": "string" },
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      },
+      "required": ["status"]
+    }
+  },
+  "required": ["traceVersion", "runId", "steps", "tool_calls", "policy_decisions", "outcome"]
+}

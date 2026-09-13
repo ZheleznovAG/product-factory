@@ -1,0 +1,19 @@
+{
+  "description": "Web app baseline with contracts bundle for planner strategy regression.",
+  "request": {
+    "goal": "Собрать web-app лендинг на Ktor.",
+    "constraints": [
+      "Без внешней БД.",
+      "Фокус на быстрый smoke-run."
+    ],
+    "target_stack": "web-app"
+  },
+  "contracts": {
+    "product": "inputs/product.yaml",
+    "constraints": "inputs/constraints.yaml",
+    "quality_profile": "inputs/quality_profile.yaml",
+    "risk_profile": "inputs/risk_profile.yaml",
+    "target_stack": "inputs/target_stack.yaml"
+  }
+}
+

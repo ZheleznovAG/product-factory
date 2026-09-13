@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Env
+.env
+.env.local
+env.d/*
+!env.d/.gitkeep
+!env.d/README.md
+!env.d/JAVA_HOME.example
+*.log
+audit.log
+
+# Factory workspace (run artifacts)
+workspace/
+
+# Scheduled pipeline runner state (local)
+scripts/.grand_pipeline_state.json
+scripts/.grand_pipeline_steps.json
+scripts/.pipeline_run.lock
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

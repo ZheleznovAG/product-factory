@@ -1,0 +1,53 @@
+{
+  "apiVersion": "productfactory.io/v1",
+  "kind": "ArtifactManifest",
+  "manifest": {
+    "version": "1.0.0",
+    "runId": "d584a544-bed1-486d-b5a6-2521f9d48ba2",
+    "workflowState": "DONE",
+    "artifactType": "repository-archive",
+    "artifactLocation": "s3://artifacts/artifacts/d584a544-bed1-486d-b5a6-2521f9d48ba2/pf-d584a544-bed1-486d-b5a6-2521f9d48ba2.zip",
+    "checksum": "17a9888d3db1764b4a74bcf5c8e8ad3bc95f3a2f32fddf6193076fd2c17ac11e",
+    "provenance": {
+      "gitCommit": "f0e1d2c3b4a5968778695a4b3c2d1e0f12345678",
+      "timestamp": "2026-02-26T12:10:00Z"
+    },
+    "artifactSha256": "8a50f3fbf7f4e0fedd6d6308f6a8895cb0f39da20b86ac2ab95f17da9db588d2",
+    "producedAt": "2026-02-26T12:10:00Z",
+    "evidence": {
+      "auditLogPath": "data/audit.log",
+      "artifactRegistryRecord": "data/artifact-registry/d584a544-bed1-486d-b5a6-2521f9d48ba2.json",
+      "toolCallIds": [
+        "tool-001-create-repo",
+        "tool-002-upload-s3"
+      ]
+    }
+  },
+  "seed": {
+    "value": 424242,
+    "source": "system",
+    "algorithm": "xoroshiro128+"
+  },
+  "inputs": {
+    "goal": "API service for catalog with CI and deployable artifact",
+    "constraints": [
+      "No secrets in code",
+      "Kotlin + Ktor only"
+    ],
+    "targetStack": "catalog-service",
+    "contracts": {
+      "product": "contracts-example/product.yaml",
+      "constraints": "contracts-example/constraints.yaml",
+      "quality_profile": "contracts-example/quality_profile.yaml",
+      "risk_profile": "contracts-example/risk_profile.yaml",
+      "target_stack": "contracts-example/target_stack.yaml",
+      "intent": "contracts-example/intent.yaml",
+      "session": "contracts-example/session.yaml"
+    },
+    "runtime": {
+      "plannerModel": "gpt-5.3-codex",
+      "codegenModel": "gpt-5.3-codex",
+      "toolRegistryVersion": "2026-02-25"
+    }
+  }
+}

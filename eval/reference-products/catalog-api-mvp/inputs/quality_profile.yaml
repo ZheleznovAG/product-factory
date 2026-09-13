@@ -1,0 +1,29 @@
+apiVersion: productfactory.io/v1
+kind: QualityProfile
+testing:
+  unitCoverageMinPercent: 75
+  integrationTestsRequired: true
+  smokeTestsRequired: true
+securityGates:
+  sbom:
+    format: cyclonedx
+    required: true
+  vulnerabilityScan:
+    tool: trivy
+    failOnSeverity: [HIGH, CRITICAL]
+  signing:
+    tool: cosign
+    required: true
+observability:
+  tracing:
+    required: true
+    protocol: otlp
+  metrics:
+    required: true
+sloGate:
+  enabled: true
+  maxGenerationTimeSeconds: 900
+  maxPolicyDenySharePercent: 5
+  minSuccessRatePercent: 95
+  lookbackRuns: 20
+

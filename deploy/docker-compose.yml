@@ -1,0 +1,240 @@
+# Product Factory — полный стек в Docker: фабрика, MinIO (S3-совместимое хранилище), OPA, neural-gateway.
+# Запуск: docker compose -f deploy/docker-compose.yml up -d
+# С Temporal (durable workflow): docker compose -f deploy/docker-compose.yml --profile temporal up -d
+#   и задать TEMPORAL_ADDRESS=temporal:7233 (в .env или для factory). Админка MinIO: http://localhost:9001
+
+services:
+  # --- Temporal (profile: temporal). PostgreSQL + Temporal Server; фабрика подключается по TEMPORAL_ADDRESS=temporal:7233 ---
+  # Имя сервиса postgresql — скрипт setup-postgres.sh и temporal-sql-tool ожидают хост postgresql.
+  postgresql:
+    image: postgres:${TEMPORAL_POSTGRES_VERSION:-16}
+    container_name: pf-temporal-postgres
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    volumes:
+      - temporal-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+    profiles:
+      - temporal
+
+  temporal-setup:
+    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.29.1-tctl-1.18.4-cli-1.5.0}
+    container_name: pf-temporal-setup
+    restart: on-failure:3
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: postgresql
+      SQL_PASSWORD: temporal
+    volumes:
+      - ./temporal/scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/setup-postgres.sh"]
+    profiles:
+      - temporal
+
+  temporal:
+    image: temporalio/server:${TEMPORAL_VERSION:-1.29.1}
+    container_name: pf-temporal
+    depends_on:
+      temporal-setup:
+        condition: service_completed_successfully
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: postgresql
+      BIND_ON_IP: 0.0.0.0
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig:ro
+    ports:
+      - "7233:7233"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "7233"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 30
+    profiles:
+      - temporal
+
+  temporal-namespace:
+    image: temporalio/admin-tools:${TEMPORAL_ADMINTOOLS_VERSION:-1.29.1-tctl-1.18.4-cli-1.5.0}
+    container_name: pf-temporal-namespace
+    restart: on-failure:5
+    depends_on:
+      temporal:
+        condition: service_healthy
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      DEFAULT_NAMESPACE: default
+    volumes:
+      - ./temporal/scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "/scripts/create-namespace.sh"]
+    profiles:
+      - temporal
+
+  temporal-ui:
+    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.34.0}
+    container_name: pf-temporal-ui
+    depends_on:
+      temporal:
+        condition: service_healthy
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: "http://localhost:3000"
+    ports:
+      - "8081:8080"
+    profiles:
+      - temporal
+
+  # --- Конец Temporal ---
+
+  # S3-совместимое хранилище артефактов (основное). Консоль: :9001
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      # curl может отсутствовать в новых образах MinIO — проверка порта
+      test: ["CMD-SHELL", "timeout 3 bash -c ':> /dev/tcp/127.0.0.1/9000' 2>/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+  # Policy engine (OPA). Фабрика дергает OPA_URL при проверке run.
+  opa:
+    image: openpolicyagent/opa:0.62.0
+    command: run --server --log-level info /policies/rego /policies/data.json
+    volumes:
+      - ../policies/opa:/policies:ro
+    ports:
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD", "opa", "health", "--addr", "http://localhost:8181"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+
+  # Neural gateway (OpenAI-совместимый API для LLM). Опционально: без него фабрика в stub-режиме.
+  neural-gateway:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.neural-gateway
+    environment:
+      NEURAL_BACKEND: ${NEURAL_BACKEND:-proxy}
+      PROXY_TARGET_URL: ${PROXY_TARGET_URL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8090:8090"
+    profiles:
+      - with-neural
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8090/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Prometheus. По умолчанию 9090.
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus-rules.yml:/etc/prometheus/prometheus-rules.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - factory
+    profiles:
+      - observability
+
+  # Grafana. По умолчанию 3001 (3000 часто занят). Datasource Prometheus и дашборд Factory — из provisioning.
+  grafana:
+    image: grafana/grafana:10.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    profiles:
+      - observability
+
+  # Фабрика. По умолчанию 9080 (чтобы не конфликтовать с 8080). Внутри контейнера — 8080.
+  factory:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      FACTORY_ENV: ${FACTORY_ENV:-local}
+      OPA_URL: http://opa:8181
+      POLICY_FAIL_MODE: ${POLICY_FAIL_MODE:-open}
+      ARTIFACT_STORAGE_BUCKET: artifacts
+      ARTIFACT_STORAGE_ENDPOINT: http://minio:9000
+      ARTIFACT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      ARTIFACT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      NEURAL_SERVICE_URL: http://neural-gateway:8090
+      AUDIT_LOG_PATH: /app/data/audit.log
+      APPROVALS_DIR: /app/data/approvals
+      ARTIFACT_REGISTRY_DIR: /app/data/artifact-registry
+      FACTORY_WORKSPACE_DIR: /app/workspace
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_OWNER: ${GITHUB_OWNER:-}
+      # Durable workflow (WS0): при заданном TEMPORAL_ADDRESS фабрика запускает Worker и выполняет run через Temporal (persist, retry). Иначе — синхронный run в процессе.
+      TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS:-}
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+    ports:
+      - "9080:8080"
+    volumes:
+      - ../archetypes:/app/archetypes:ro
+      - factory-data:/app/data
+      - factory-workspace:/app/workspace
+    depends_on:
+      minio:
+        condition: service_healthy
+      opa:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  minio-data:
+  factory-data:
+  factory-workspace:
+  prometheus-data:
+  grafana-data:
+  temporal-postgres-data:

@@ -1,0 +1,9 @@
+{
+    "runId": "a93a26eb-058d-48ef-9de0-b791be009fb2",
+    "workflowState": "DONE",
+    "updatedAt": "2026-02-24T07:20:52.564012296Z",
+    "repositoryVersion": "repo:product-factory/pf-a93a26eb-058d-48ef-9de0-b791be009fb2:v1",
+    "imageVersion": "image:ghcr.io/product-factory/pf-a93a26eb-058d-48ef-9de0-b791be009fb2:v1",
+    "sbomVersion": "sbom:cyclonedx:placeholder-v1",
+    "signatureVersion": "signature:cosign:placeholder-v1"
+}

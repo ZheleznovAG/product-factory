@@ -1,0 +1,11 @@
+{
+  "live": {
+    "min_success_rate": 95.0,
+    "max_p50_seconds": 900.0,
+    "max_p99_seconds": 7200.0
+  },
+  "eval": {
+    "min_pass_rate": 1.0,
+    "min_average_score": 0.95
+  }
+}

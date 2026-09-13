@@ -1,0 +1,17 @@
+apiVersion: productfactory.io/v1
+kind: Constraints
+security:
+  secrets:
+    storage: vault
+    loggingRedaction: true
+  dataClassification:
+    pii: low
+    retentionDays: 90
+platform:
+  runtime: jvm17
+  os: linux
+  containerRegistry: ghcr.io
+delivery:
+  ci: github-actions
+  cd: gitops
+

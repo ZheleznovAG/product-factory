@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/risk_profile.schema.json",
+  "title": "RiskProfile",
+  "description": "Input contract v1 for risk_profile.yaml (RiskProfile).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "riskTier", "agentPolicy", "threatModel"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "RiskProfile"
+    },
+    "riskTier": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "agentPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approvalsRequiredFor", "budgets"],
+      "properties": {
+        "approvalsRequiredFor": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "write_repository",
+              "deploy_staging",
+              "create_secrets"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "budgets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxLlmtokensPerRun", "maxToolCallsPerRun", "maxWallClockSecondsPerRun"],
+          "properties": {
+            "maxLlmtokensPerRun": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxToolCallsPerRun": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxWallClockSecondsPerRun": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "threatModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["llmTop10Focus"],
+      "properties": {
+        "llmTop10Focus": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "prompt_injection",
+              "insecure_output_handling",
+              "excessive_agency",
+              "model_dos",
+              "supply_chain"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

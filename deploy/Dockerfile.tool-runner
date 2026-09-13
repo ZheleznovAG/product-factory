@@ -1,0 +1,7 @@
+# Минимальный образ для изолированного выполнения tools (create_repo_from_archetype, apply_patch).
+# Только файловая система и git, без доступа к хосту.
+FROM alpine:3.19
+RUN apk add --no-cache git
+COPY tool-runner/runner.sh /runner.sh
+RUN chmod +x /runner.sh
+ENTRYPOINT ["/runner.sh"]

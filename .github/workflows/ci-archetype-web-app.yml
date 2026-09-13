@@ -1,0 +1,145 @@
+name: ci-archetype-web-app
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "archetypes/web-app/**"
+      - ".github/workflows/ci-archetype-web-app.yml"
+  pull_request:
+    paths:
+      - "archetypes/web-app/**"
+      - ".github/workflows/ci-archetype-web-app.yml"
+
+jobs:
+  build-test-and-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: archetypes/web-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: "8.7"
+      - name: Build and test
+        run: gradle build --no-daemon
+      - name: Build Docker image
+        run: docker build -t web-app:ci .
+
+  staging-smoke:
+    needs: build-test-and-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build local staging image
+        run: docker build -t web-app:staging-ci archetypes/web-app
+
+      - name: Run container and smoke test
+        run: |
+          docker run -d -p 18081:8080 --name web-app-smoke web-app:staging-ci
+          ./scripts/smoke-staging.sh http://127.0.0.1:18081/health/ready
+
+      - name: Stop smoke container
+        if: always()
+        run: docker stop web-app-smoke 2>/dev/null || true; docker rm web-app-smoke 2>/dev/null || true
+
+  supply-chain-gate:
+    needs: build-test-and-image
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    defaults:
+      run:
+        working-directory: archetypes/web-app
+    env:
+      TRIVY_FAIL_SEVERITY: HIGH,CRITICAL
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image reference
+        run: |
+          {
+            echo "IMAGE_REPO=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/web-app"
+            echo "IMAGE_TAG=${GITHUB_SHA}"
+            echo "IMAGE_REF=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/web-app:${GITHUB_SHA}"
+          } >> "$GITHUB_ENV"
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push image
+        run: |
+          docker build -t "${IMAGE_REF}" .
+          docker push "${IMAGE_REF}"
+
+      - name: Resolve pushed image digest
+        run: |
+          DIGEST="$(docker buildx imagetools inspect "${IMAGE_REF}" --format '{{.Manifest.Digest}}')"
+          if [ -z "${DIGEST}" ]; then
+            echo "Unable to resolve pushed image digest for ${IMAGE_REF}" >&2
+            exit 1
+          fi
+          echo "IMAGE_DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+          echo "IMAGE_DIGEST_REF=${IMAGE_REPO}@${DIGEST}" >> "$GITHUB_ENV"
+
+      - name: Generate SBOM (Syft, CycloneDX JSON)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE_REF }}
+          format: cyclonedx-json
+          output-file: sbom-cyclonedx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-web-app-${{ github.sha }}
+          path: archetypes/web-app/sbom-cyclonedx.json
+
+      - name: Scan image vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.IMAGE_REF }}
+          severity: ${{ env.TRIVY_FAIL_SEVERITY }}
+          exit-code: "1"
+          ignore-unfixed: true
+          format: table
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (Cosign keyless)
+        run: cosign sign --yes "${IMAGE_REF}"
+
+      - name: Verify image signature (Cosign)
+        run: |
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/ci-archetype-web-app.yml@.*" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${IMAGE_REF}"
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE_REPO }}
+          subject-digest: ${{ env.IMAGE_DIGEST }}
+          push-to-registry: true
+
+      - name: Verify SLSA provenance attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh attestation verify "oci://${IMAGE_DIGEST_REF}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --predicate-type "https://slsa.dev/provenance/v1"

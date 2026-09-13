@@ -1,0 +1,86 @@
+{
+  "dataset": "ragas_minimal",
+  "version": "0.3.0",
+  "scenarios": [
+    {
+      "id": "planner_goal_faithfulness",
+      "description": "Планировщик остаётся faithful к контексту и релевантен цели run/policy",
+      "goal": "Собрать Docker образ фабрики и проверить, что privileged tool требует approval.",
+      "context": [
+        "Собрать Docker образ фабрики и запустить контейнер через docker run.",
+        "Privileged tool требует approval и require_human_approval в policy decision.",
+        "Агент формирует proposals и не делает direct deploy вне Tool Executor."
+      ],
+      "answer": "План: собрать Docker образ фабрики, запустить контейнер и проверить, что privileged tool требует approval. Для policy decision использовать require_human_approval. Изменения оформить как proposal без direct deploy.",
+      "statements": [
+        "Собрать Docker образ фабрики и запустить контейнер через docker run.",
+        "Privileged tool требует approval и require_human_approval в policy decision.",
+        "Агент формирует proposals и не делает direct deploy вне Tool Executor."
+      ],
+      "expected": {
+        "min_faithfulness": 0.9,
+        "min_relevance": 0.6
+      }
+    },
+    {
+      "id": "codegen_response_relevance",
+      "description": "Ответ codegen закрывает requested scope без ухода в нерелевантные задачи",
+      "goal": "Добавить секцию в docs/runbook.md про локальный запуск eval gate и CI trigger paths.",
+      "context": [
+        "Локальный запуск eval gate выполняется через python3 ci/quality_gates.py --mode agent --dataset eval/datasets/agent_trace_minimal.json.",
+        "В CI job eval-regression-gate запускается при изменениях prompts/, policies/opa/, contracts/tools*.json, docs/tools-list-mvp.md и eval/.",
+        "Документация должна описывать что делать при падении gate."
+      ],
+      "answer": "Добавить в runbook раздел с локальной командой quality_gates.py, перечислить CI trigger paths для eval-regression-gate и шаги разбора падения regression gate.",
+      "statements": [
+        "Локальный запуск eval gate выполняется через python3 ci/quality_gates.py --mode agent --dataset eval/datasets/agent_trace_minimal.json.",
+        "В CI job eval-regression-gate запускается при изменениях prompts/, policies/opa/, contracts/tools*.json, docs/tools-list-mvp.md и eval/.",
+        "Документация должна описывать что делать при падении gate."
+      ],
+      "expected": {
+        "min_faithfulness": 0.9,
+        "min_relevance": 0.5
+      }
+    },
+    {
+      "id": "planner_policy_scope_alignment",
+      "description": "Planner учитывает policy scope: только proposal через Tool Executor и без direct deploy",
+      "goal": "Сформировать план изменений с proposal-only режимом через Tool Executor и без direct deploy.",
+      "context": [
+        "Агент выполняет только proposal-действия: diff, ADR, test plan.",
+        "Любые side-effects идут только через Tool Executor.",
+        "Direct deploy агентом запрещен вне policy-approved execution."
+      ],
+      "answer": "План: подготовить diff/ADR/test plan как proposal, отправить действия через Tool Executor и не выполнять direct deploy агентом.",
+      "statements": [
+        "Агент выполняет только proposal-действия: diff, ADR, test plan.",
+        "Любые side-effects идут только через Tool Executor.",
+        "Direct deploy агентом запрещен вне policy-approved execution."
+      ],
+      "expected": {
+        "min_faithfulness": 0.9,
+        "min_relevance": 0.55
+      }
+    },
+    {
+      "id": "risk_profile_relevance_critical_controls",
+      "description": "Ответ релевантен требованиям risk_profile для privileged операций и approvals",
+      "goal": "Для high-risk сценария добавить human approval и audit trail для privileged tool операций.",
+      "context": [
+        "Для privileged tools policy может требовать require_human_approval=true.",
+        "В high-risk сценариях обязателен audit trail по policy decisions и tool calls.",
+        "Если approval не получен, privileged действие не должно выполняться."
+      ],
+      "answer": "Для high-risk режима добавляем human approval на privileged tool операции, фиксируем audit trail и блокируем выполнение без approval.",
+      "statements": [
+        "Для privileged tools policy может требовать require_human_approval=true.",
+        "В high-risk сценариях обязателен audit trail по policy decisions и tool calls.",
+        "Если approval не получен, privileged действие не должно выполняться."
+      ],
+      "expected": {
+        "min_faithfulness": 0.9,
+        "min_relevance": 0.5
+      }
+    }
+  ]
+}

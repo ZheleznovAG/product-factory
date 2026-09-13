@@ -1,0 +1,55 @@
+{
+  "registry_version": "0.1.0",
+  "tools": [
+    {
+      "name": "create_repo_from_archetype",
+      "description": "Create a new repository from an archetype template",
+      "risk_tier": "write_limited",
+      "requires_human_approval": false,
+      "auth_scope": ["repo:write"],
+      "idempotency": { "required": true, "key_fields": ["repo_name", "archetype_id"] },
+      "timeouts_ms": { "schedule_to_close": 120000, "start_to_close": 60000 },
+      "retry_policy": { "max_attempts": 3, "initial_interval_ms": 1000, "backoff_coefficient": 2 },
+      "input_schema": { "type": "object", "properties": { "repo_name": {"type": "string"}, "archetype_id": {"type": "string"} }, "required": ["repo_name", "archetype_id"] },
+      "output_schema": { "type": "object", "properties": { "artifact_location": {"type": "string"} } }
+    },
+    {
+      "name": "apply_patch",
+      "description": "Apply a unified diff patch to a repository",
+      "risk_tier": "write_limited",
+      "requires_human_approval": false,
+      "auth_scope": ["repo:write"],
+      "idempotency": { "required": true, "key_fields": ["repo_name"] },
+      "timeouts_ms": { "schedule_to_close": 60000, "start_to_close": 30000 },
+      "retry_policy": { "max_attempts": 2, "initial_interval_ms": 1000, "backoff_coefficient": 2 },
+      "input_schema": { "type": "object", "properties": { "repo_name": {"type": "string"}, "patch_content": {"type": "string"} }, "required": ["repo_name", "patch_content"] },
+      "output_schema": { "type": "object", "properties": { "applied": {"type": "boolean"} } }
+    },
+    {
+      "name": "create_github_repo",
+      "description": "Create a repository on GitHub",
+      "risk_tier": "privileged",
+      "requires_human_approval": true,
+      "auth_scope": ["repo:write", "github"],
+      "allowed_secrets": ["GITHUB_TOKEN"],
+      "idempotency": { "required": true, "key_fields": ["repo_name", "owner"] },
+      "timeouts_ms": { "schedule_to_close": 60000, "start_to_close": 30000 },
+      "retry_policy": { "max_attempts": 2, "initial_interval_ms": 2000, "backoff_coefficient": 2 },
+      "input_schema": { "type": "object", "properties": { "repo_name": {"type": "string"}, "owner": {"type": "string"}, "private": {"type": "boolean"} }, "required": ["repo_name"] },
+      "output_schema": { "type": "object", "properties": { "repo_url": {"type": "string"} } }
+    },
+    {
+      "name": "push_repo_to_github",
+      "description": "Push local repository to GitHub",
+      "risk_tier": "privileged",
+      "requires_human_approval": true,
+      "auth_scope": ["repo:write", "github"],
+      "allowed_secrets": ["GITHUB_TOKEN"],
+      "idempotency": { "required": true, "key_fields": ["repo_name", "owner"] },
+      "timeouts_ms": { "schedule_to_close": 120000, "start_to_close": 60000 },
+      "retry_policy": { "max_attempts": 3, "initial_interval_ms": 1000, "backoff_coefficient": 2 },
+      "input_schema": { "type": "object", "properties": { "repo_name": {"type": "string"}, "owner": {"type": "string"} }, "required": ["repo_name"] },
+      "output_schema": { "type": "object", "properties": { "pushed": {"type": "boolean"} } }
+    }
+  ]
+}

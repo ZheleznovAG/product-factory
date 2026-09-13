@@ -1,0 +1,16 @@
+# Budgets for factory runs (tokens, tool calls, wall-clock).
+# Enforced by Policy Engine (OPA) or gateway. Phase 2.
+---
+defaults:
+  max_tokens_per_run: 100000
+  max_tool_calls_per_run: 50
+  max_wall_clock_seconds: 3600
+
+tiers:
+  low_risk:
+    max_tokens_per_run: 200000
+    max_tool_calls_per_run: 100
+  high_risk:
+    max_tokens_per_run: 50000
+    max_tool_calls_per_run: 20
+    require_human_approval: true

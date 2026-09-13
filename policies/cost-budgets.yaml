@@ -1,0 +1,16 @@
+apiVersion: productfactory.io/v1
+kind: CostBudgetPolicy
+
+periodCaps:
+  weekly:
+    llm_tokens_total: 1200000
+    tool_calls_total: 8000
+    runs_total: 500
+    soft_threshold_ratio: 0.8
+    hard_threshold_ratio: 1.0
+  monthly:
+    llm_tokens_total: 5000000
+    tool_calls_total: 32000
+    runs_total: 2000
+    soft_threshold_ratio: 0.8
+    hard_threshold_ratio: 1.0

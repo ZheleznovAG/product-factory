@@ -1,0 +1,14 @@
+# Prometheus config: scrape метрик фабрики
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# SLO/cost alerting rules for Product Factory.
+rule_files:
+  - /etc/prometheus/prometheus-rules.yml
+
+scrape_configs:
+  - job_name: "factory"
+    static_configs:
+      - targets: ["factory:8080"]
+    metrics_path: "/metrics"

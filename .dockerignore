@@ -1,0 +1,25 @@
+# Git and IDE
+.git
+.idea
+.vscode
+*.iml
+
+# Build and runtime
+.gradle
+build
+out
+*.log
+audit.log
+.env
+.env.*
+
+# Docs and reports (not needed in image)
+*.md
+docs
+deep-research-report-*.md
+
+# Eval datasets (optional: include if runner runs in container)
+# eval
+# ci
+
+# Keep in context: src, gradle, build.gradle.kts, settings.gradle.kts, policies, contracts

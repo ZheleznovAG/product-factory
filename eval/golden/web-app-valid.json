@@ -1,0 +1,44 @@
+{
+  "id": "web-app-valid",
+  "description": "Valid run for web-app archetype",
+  "input": {
+    "run_id": "golden-web-app",
+    "goal": "Build marketing website",
+    "constraints": [
+      "landing-page"
+    ],
+    "target_stack": "web-app",
+    "policy": {
+      "allow": true,
+      "require_human_approval": false
+    }
+  },
+  "expected": {
+    "status": "accepted",
+    "message_contains": "Workflow completed",
+    "state_sequence": [
+      "PLANNED",
+      "GENERATED",
+      "TESTED",
+      "SECURED",
+      "STAGED",
+      "DONE"
+    ],
+    "required_event_types": [
+      "policy_check",
+      "tool_call_executed",
+      "artifact_registry_updated"
+    ],
+    "forbidden_event_types": [
+      "approval_required",
+      "rollback_executed"
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "create_repo_from_archetype",
+        "archetype_id": "web-app"
+      }
+    ],
+    "final_registry_state": "DONE"
+  }
+}

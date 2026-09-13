@@ -1,0 +1,27 @@
+{
+  "type": "test_plan",
+  "scope": "Workflow planning and policy-gated execution for Собрать web-app лендинг на Ktor.",
+  "cases": [
+    {
+      "id": "policy-deny",
+      "description": "Reject run when policy allow=false.",
+      "type": "integration"
+    },
+    {
+      "id": "planner-contract",
+      "description": "Validate planner artifacts against agent outputs schema.",
+      "type": "unit"
+    },
+    {
+      "id": "tool-idempotency",
+      "description": "Ensure idempotent tool execution is replay-safe.",
+      "type": "integration"
+    }
+  ],
+  "coverage_targets": {
+    "unit_percent": 70,
+    "integration_required": true,
+    "security_required": true
+  }
+}
+

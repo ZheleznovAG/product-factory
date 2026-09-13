@@ -1,0 +1,15 @@
+apiVersion: productfactory.io/v1
+kind: RiskProfile
+riskTier: low
+agentPolicy:
+  approvalsRequiredFor:
+    - deploy_staging
+  budgets:
+    maxLlmtokensPerRun: 40000
+    maxToolCallsPerRun: 15
+    maxWallClockSecondsPerRun: 480
+threatModel:
+  llmTop10Focus:
+    - prompt_injection
+    - insecure_output_handling
+

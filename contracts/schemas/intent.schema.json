@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/intent.schema.json",
+  "title": "IntentSpec",
+  "description": "Input contract v1 for intent.yaml (IntentSpec). Maps Intent -> Reality layers: outcome, experience, constraints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "outcome", "experience", "constraints"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "IntentSpec"
+    },
+    "outcome": {
+      "type": "object",
+      "description": "What should become different in the world or in the user.",
+      "additionalProperties": false,
+      "required": ["goal", "result"],
+      "properties": {
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "successSignals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "experience": {
+      "type": "object",
+      "description": "How the process should feel and work for the user.",
+      "additionalProperties": false,
+      "required": ["feeling", "interactionStyle"],
+      "properties": {
+        "feeling": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interactionStyle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tempo": {
+          "type": "string",
+          "enum": ["slow", "balanced", "fast"]
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Must-have and must-not boundaries for generation and execution.",
+      "additionalProperties": false,
+      "required": ["mustHave"],
+      "properties": {
+        "mustHave": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "mustNot": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "maxSessionMinutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "budgetUsdMax": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Optional confidence in extracted intent."
+    },
+    "referenceIds": {
+      "type": "array",
+      "description": "Optional references used during intent extraction.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

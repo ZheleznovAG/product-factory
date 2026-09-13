@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/constraints.schema.json",
+  "title": "Constraints",
+  "description": "Input contract v1 for constraints.yaml (Constraints).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "security", "platform", "delivery"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "Constraints"
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secrets", "dataClassification", "allowedOutboundDomains"],
+      "properties": {
+        "secrets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["storage", "loggingRedaction"],
+          "properties": {
+            "storage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "loggingRedaction": {
+              "type": "boolean"
+            }
+          }
+        },
+        "dataClassification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pii", "retentionDays"],
+          "properties": {
+            "pii": {
+              "type": "string",
+              "enum": ["none", "low", "medium", "high"]
+            },
+            "retentionDays": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "allowedOutboundDomains": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "os", "containerRegistry"],
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "minLength": 1
+        },
+        "os": {
+          "type": "string",
+          "minLength": 1
+        },
+        "containerRegistry": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ci", "cd"],
+      "properties": {
+        "ci": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cd": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "tools": ["create_repo_from_archetype", "apply_patch", "create_github_repo", "push_repo_to_github"],
+  "high_risk_tools": ["create_github_repo", "push_repo_to_github"],
+  "tool_risk": {
+    "create_github_repo": "privileged",
+    "push_repo_to_github": "privileged"
+  },
+  "budgets": {
+    "defaults": {
+      "max_tokens_per_run": 100000,
+      "max_tool_calls_per_run": 50,
+      "max_wall_clock_seconds": 3600
+    }
+  }
+}

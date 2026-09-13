@@ -1,0 +1,12 @@
+# Загрузка дашбордов из папки при старте Grafana (включая Factory overview и Factory SLO & Cost)
+apiVersion: 1
+providers:
+  - name: Product Factory
+    orgId: 1
+    folder: Product Factory
+    folderUid: product-factory
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards

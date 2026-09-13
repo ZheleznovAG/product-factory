@@ -1,0 +1,9 @@
+# Codex CLI: конфиг для Product Factory
+# Спринты (run_alpha_sprint.py и др.) вызывают codex exec без MCP.
+# Сборка/тесты — через обычные команды в терминале (docker build, gradle и т.д.).
+
+# MCP Docker отключён (не используется в локальном автоматизированном запуске).
+# [mcp_servers.docker]
+# command = "docker"
+# args = ["run", "-i", "--rm", "-v", "/var/run/docker.sock:/var/run/docker.sock", "mcp/docker"]
+# enabled = false

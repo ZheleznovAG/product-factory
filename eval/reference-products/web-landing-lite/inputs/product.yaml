@@ -1,0 +1,21 @@
+apiVersion: productfactory.io/v1
+kind: ProductSpec
+metadata:
+  productId: ref-web-landing-lite
+  owner: platform-team
+  createdAt: "2026-02-26"
+product:
+  type: web-app
+  name: Reference Web Landing
+  description: Planner regression reference product for web-app strategy.
+  interfaces:
+    http:
+      basePath: /
+      auth: none
+data:
+  stores: []
+nonFunctional:
+  availabilityTarget: "99.5"
+  maxP95LatencyMs: 300
+  maxErrorRatePercent: 0.5
+

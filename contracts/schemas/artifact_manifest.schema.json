@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productfactory.io/schemas/v1/artifact_manifest.schema.json",
+  "title": "ArtifactManifest",
+  "description": "Contract v1 for artifact_manifest.json. Captures manifest + seed + inputs required for reproducible artifact runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "manifest", "seed", "inputs"],
+  "properties": {
+    "apiVersion": {
+      "const": "productfactory.io/v1"
+    },
+    "kind": {
+      "const": "ArtifactManifest"
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "runId", "workflowState", "artifactType", "artifactLocation", "checksum", "provenance", "producedAt", "evidence"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workflowState": {
+          "type": "string",
+          "enum": ["STAGED", "DONE"]
+        },
+        "artifactType": {
+          "type": "string",
+          "enum": ["repository-archive", "container-image", "sbom", "other"]
+        },
+        "artifactLocation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactSha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "checksum": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gitCommit", "timestamp"],
+          "properties": {
+            "gitCommit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "producedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["auditLogPath", "artifactRegistryRecord"],
+          "properties": {
+            "auditLogPath": {
+              "type": "string",
+              "minLength": 1
+            },
+            "artifactRegistryRecord": {
+              "type": "string",
+              "minLength": 1
+            },
+            "toolCallIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "source"],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["user", "system", "replay"]
+        },
+        "algorithm": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["goal", "constraints", "targetStack", "contracts"],
+      "properties": {
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "targetStack": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contracts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "product": {
+              "type": "string",
+              "minLength": 1
+            },
+            "constraints": {
+              "type": "string",
+              "minLength": 1
+            },
+            "quality_profile": {
+              "type": "string",
+              "minLength": 1
+            },
+            "risk_profile": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target_stack": {
+              "type": "string",
+              "minLength": 1
+            },
+            "intent": {
+              "type": "string",
+              "minLength": 1
+            },
+            "session": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plannerModel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "codegenModel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "toolRegistryVersion": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

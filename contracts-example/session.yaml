@@ -1,0 +1,11 @@
+sessionId: "sess-2026-02-26-001"
+createdAt: "2026-02-26T12:00:00Z"
+intent:
+  intentRef: "intent-abc-123"
+preferences:
+  language: "ru"
+  tone: "concise"
+consentFlags:
+  dataProcessing: true
+  memoryStorage: false
+  analytics: false

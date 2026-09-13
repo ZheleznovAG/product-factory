@@ -1,0 +1,45 @@
+{
+  "id": "catalog-service-valid",
+  "description": "Valid run for catalog-service archetype",
+  "input": {
+    "run_id": "golden-catalog-service",
+    "goal": "Build catalog API service",
+    "constraints": [
+      "ktor",
+      "postgres"
+    ],
+    "target_stack": "catalog-service",
+    "policy": {
+      "allow": true,
+      "require_human_approval": false
+    }
+  },
+  "expected": {
+    "status": "accepted",
+    "message_contains": "Workflow completed",
+    "state_sequence": [
+      "PLANNED",
+      "GENERATED",
+      "TESTED",
+      "SECURED",
+      "STAGED",
+      "DONE"
+    ],
+    "required_event_types": [
+      "policy_check",
+      "tool_call_executed",
+      "artifact_registry_updated"
+    ],
+    "forbidden_event_types": [
+      "approval_required",
+      "rollback_executed"
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "create_repo_from_archetype",
+        "archetype_id": "catalog-service"
+      }
+    ],
+    "final_registry_state": "DONE"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "registry_version": "0.1.0",
+  "tools": [
+    {
+      "name": "create_repo_from_archetype",
+      "description": "Create a new repository from an archetype template and initial commit",
+      "risk_tier": "write_limited",
+      "requires_human_approval": false,
+      "auth_scope": ["repo:write"],
+      "idempotency": {
+        "required": true,
+        "key_fields": ["repo_name", "archetype_id"]
+      },
+      "timeouts_ms": {
+        "schedule_to_close": 120000,
+        "start_to_close": 60000
+      },
+      "retry_policy": {
+        "max_attempts": 3,
+        "initial_interval_ms": 1000,
+        "backoff_coefficient": 2.0
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "repo_name": { "type": "string" },
+          "archetype_id": { "type": "string" },
+          "owner": { "type": "string" }
+        },
+        "required": ["repo_name", "archetype_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "repo_url": { "type": "string" },
+          "commit_sha": { "type": "string" }
+        }
+      }
+    }
+  ]
+}
